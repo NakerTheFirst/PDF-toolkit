@@ -1,4 +1,5 @@
 import argparse
+import re
 from datetime import datetime
 from pathlib import Path
 
@@ -37,9 +38,19 @@ def resolve_output_dir(output: Path | None) -> Path:
     return Path.home() / "Desktop" / f"pdf_output_{timestamp}"
 
 
+_QUIT_SIGNALS = {"q", "quit", "exit"}
+
+
+def ask(prompt: str) -> str:
+    raw = input(prompt).strip()
+    if raw.lower() in _QUIT_SIGNALS:
+        print("Quitting.")
+        raise SystemExit(0)
+    return raw
+
+
 def prompt_search_dir() -> Path:
-    raw = input("Enter directory to scan for PDFs: ").strip()
-    return Path(raw)
+    return Path(ask("Enter directory to scan for PDFs: "))
 
 
 def prompt_operation() -> str:
@@ -47,24 +58,45 @@ def prompt_operation() -> str:
     print("  1. Convert PDFs to Markdown")
     print("  2. Combine PDFs into one file")
     while True:
-        choice = input("Choose (1/2): ").strip()
+        choice = ask("Choose (1/2): ")
         if choice in ("1", "2"):
             return "convert" if choice == "1" else "combine"
         print("Please enter 1 or 2.")
 
 
-def prompt_selection(pdfs: list[Path]) -> list[Path]:
-    raw = input("\nWhich PDFs to include? (comma-separated indices or 'all') [all]: ").strip()
-    if not raw or raw.lower() == "all":
-        return pdfs
-    indices = [s.strip() for s in raw.split(",")]
-    selected = []
-    for idx in indices:
-        if idx.isdigit() and 1 <= int(idx) <= len(pdfs):
-            selected.append(pdfs[int(idx) - 1])
+def parse_selection(raw: str, count: int) -> list[int]:
+    """Parse a selection string into a sorted list of valid 1-based indices.
+
+    Supported tokens (comma-separated):
+      1, 2, 3    plain indices
+      1., 2.     indices with trailing dot
+      1-3        inclusive range
+      -2         exclude index 2 from previously included indices
+    """
+    included: set[int] = set()
+    excluded: set[int] = set()
+    for token in raw.split(","):
+        token = token.strip().rstrip(".")
+        if not token:
+            continue
+        if re.fullmatch(r"-\d+", token):
+            excluded.add(int(token[1:]))
+        elif re.fullmatch(r"\d+-\d+", token):
+            a, b = (int(x) for x in token.split("-"))
+            included.update(range(a, b + 1))
+        elif re.fullmatch(r"\d+", token):
+            included.add(int(token))
         else:
-            print(f"Ignoring invalid index: {idx!r}")
-    return selected
+            print(f"Ignoring unrecognised token: {token!r}")
+    return sorted(i for i in included if 1 <= i <= count and i not in excluded)
+
+
+def prompt_selection(pdfs: list[Path]) -> list[Path]:
+    raw = ask("\nWhich PDFs to include? (indices/ranges/exclusions or 'all') [all]: ")
+    if not raw or raw.lower() == "all":
+        return list(pdfs)
+    indices = parse_selection(raw, len(pdfs))
+    return [pdfs[i - 1] for i in indices]
 
 
 def convert_pdfs(pdfs: list[Path], output_dir: Path) -> None:
