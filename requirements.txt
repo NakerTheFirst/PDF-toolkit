@@ -1,2 +1,2 @@
-markitdown
+markitdown[pdf]
 pypdf
