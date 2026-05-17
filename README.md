@@ -68,3 +68,7 @@ PDF-toolkit/
 ├── requirements.txt
 └── pyproject.toml
 ```
+
+## Possible extensions
+- Add an .exe release
+- Scrape PDFs from a cloud storage (Google Drive Moodle/E-learning resources)
