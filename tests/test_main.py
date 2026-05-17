@@ -82,6 +82,31 @@ def test_parse_selection_exclusion_from_spec():
     # Example from TODO: 1-4, 5, -2 => {1,2,3,4,5} - {2} = [1,3,4,5]
     assert parse_selection("1-4, 5, -2", 5) == [1, 3, 4, 5]
 
+def test_parse_selection_single_index():
+    assert parse_selection("3", 5) == [3]
+
+def test_parse_selection_multiple_exclusions():
+    # README example: 1-5, -2, -4 => [1,3,5]
+    assert parse_selection("1-5, -2, -4", 5) == [1, 3, 5]
+
+def test_parse_selection_mixed_dots_and_plain():
+    assert parse_selection("1., 2, 3.", 5) == [1, 2, 3]
+
+def test_parse_selection_duplicate_indices():
+    # duplicates should be deduplicated via the set
+    assert parse_selection("1, 1, 2", 5) == [1, 2]
+
+def test_parse_selection_reverse_range_yields_empty():
+    # range(4, 2) is empty — nothing added
+    assert parse_selection("4-2", 5) == []
+
+def test_parse_selection_exclusion_of_non_included():
+    # -5 is excluded but was never in the included set — no effect
+    assert parse_selection("1-3, -5", 5) == [1, 2, 3]
+
+def test_parse_selection_exclusion_removes_everything():
+    assert parse_selection("1, -1", 5) == []
+
 def test_parse_selection_out_of_range_filtered():
     assert parse_selection("1, 99", 3) == [1]
 
