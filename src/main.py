@@ -2,6 +2,9 @@ import argparse
 from datetime import datetime
 from pathlib import Path
 
+from markitdown import MarkItDown
+from pypdf import PdfWriter
+
 
 def parse_args():
     parser = argparse.ArgumentParser(
@@ -64,6 +67,27 @@ def prompt_selection(pdfs: list[Path]) -> list[Path]:
     return selected
 
 
+def convert_pdfs(pdfs: list[Path], output_dir: Path) -> None:
+    output_dir.mkdir(parents=True, exist_ok=True)
+    md = MarkItDown()
+    for pdf in pdfs:
+        result = md.convert(str(pdf))
+        out_path = output_dir / (pdf.stem + ".md")
+        out_path.write_text(result.text_content, encoding="utf-8")
+        print(f"  Converted: {out_path}")
+
+
+def combine_pdfs(pdfs: list[Path], output_dir: Path) -> None:
+    output_dir.mkdir(parents=True, exist_ok=True)
+    writer = PdfWriter()
+    for pdf in pdfs:
+        writer.append(str(pdf))
+    out_path = output_dir / "combined.pdf"
+    with out_path.open("wb") as f:
+        writer.write(f)
+    print(f"  Combined: {out_path}")
+
+
 def find_pdfs(search_dir: Path, recursive: bool) -> list[Path]:
     pattern = "**/*.pdf" if recursive else "*.pdf"
     return sorted(search_dir.glob(pattern))
@@ -92,6 +116,11 @@ def main():
     if not selected:
         print("No valid PDFs selected.")
         return
+
+    if operation == "convert":
+        convert_pdfs(selected, output_dir)
+    else:
+        combine_pdfs(selected, output_dir)
 
 
 if __name__ == "__main__":
