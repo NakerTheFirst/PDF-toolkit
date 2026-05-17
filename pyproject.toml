@@ -6,3 +6,6 @@ dependencies = [
     "markitdown",
     "pypdf",
 ]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
