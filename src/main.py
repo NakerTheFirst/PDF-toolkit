@@ -34,9 +34,21 @@ def resolve_output_dir(output: Path | None) -> Path:
     return Path.home() / "Desktop" / f"pdf_output_{timestamp}"
 
 
+def find_pdfs(search_dir: Path, recursive: bool) -> list[Path]:
+    pattern = "**/*.pdf" if recursive else "*.pdf"
+    return sorted(search_dir.glob(pattern))
+
+
+def display_pdfs(pdfs: list[Path]) -> None:
+    for i, pdf in enumerate(pdfs, 1):
+        print(f"  {i}. {pdf.name}")
+
+
 def main():
     args = parse_args()
     output_dir = resolve_output_dir(args.output)
+    pdfs = find_pdfs(args.search_dir, recursive=not args.non_recursive)
+    display_pdfs(pdfs)
 
 
 if __name__ == "__main__":
