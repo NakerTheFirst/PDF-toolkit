@@ -2,25 +2,11 @@
 
 CLI tool for batch PDF-to-Markdown conversion and PDF merging, with interactive file selection.
 
-## Structure
-
-```
-PDF-toolkit/
-├── src/
-│   └── main.py          # single-file CLI entry point
-├── tests/
-│   └── test_main.py     # test suite
-├── requirements.txt
-└── pyproject.toml
-```
-
-## Setup
+## Usage
 
 ```bash
 pip install -r requirements.txt
 ```
-
-## Usage
 
 ### Interactive mode
 
@@ -70,3 +56,15 @@ Found 5 PDF(s):
 | `1-3, 5` | range and individual | 1 2 3 5 |
 | `1-4, -3` | range minus exclusion | 1 2 4 |
 | `1-5, -2, -4` | range minus multiple exclusions | 1 3 5 |
+
+## Structure
+
+```
+PDF-toolkit/
+├── src/
+│   └── main.py          # single-file CLI entry point
+├── tests/
+│   └── test_main.py     # test suite
+├── requirements.txt
+└── pyproject.toml
+```
